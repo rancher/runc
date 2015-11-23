@@ -179,6 +179,10 @@ func (m *Manager) Set(container *configs.Config) error {
 // Freeze toggles the container's freezer cgroup depending on the state
 // provided
 func (m *Manager) Freeze(state configs.FreezerState) error {
+	if m.Cgroups == nil {
+		return nil
+	}
+
 	d, err := getCgroupData(m.Cgroups, 0)
 	if err != nil {
 		return err
@@ -203,6 +207,10 @@ func (m *Manager) Freeze(state configs.FreezerState) error {
 }
 
 func (m *Manager) GetPids() ([]int, error) {
+	if m.Cgroups == nil {
+		return []int{}, nil
+	}
+
 	d, err := getCgroupData(m.Cgroups, 0)
 	if err != nil {
 		return nil, err
