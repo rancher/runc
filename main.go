@@ -26,9 +26,9 @@ const (
 	version            = "0.0.0"
 	specConfig         = "config.json"
 	runtimeConfig      = "runtime.json"
-	driverRun          = "/run/docker/execdriver/native"
+	driverRun          = "/var/run/docker/execdriver/native"
 	containerDriverRun = "/host" + driverRun
-	libcontainerRoot   = "/run/rancher/container"
+	libcontainerRoot   = "/var/run/rancher/container"
 )
 
 func main() {
