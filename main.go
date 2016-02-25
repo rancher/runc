@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -151,8 +152,27 @@ func getMntFd(pid int) (string, error) {
 	return fmt.Sprintf("/proc/%s/ns/mnt", ppid), nil
 }
 
+func findContainerId() (string, error) {
+	f, err := os.Open(fmt.Sprintf("/proc/%d/cgroup", os.Getpid()))
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), "docker/") {
+			parts := strings.Split(scanner.Text(), "/")
+			return parts[len(parts)-1], nil
+		}
+	}
+
+	content, _ := ioutil.ReadFile(fmt.Sprintf("/proc/%d/cgroup", os.Getpid()))
+	return "", fmt.Errorf("Failed to find container id:\n%s", string(content))
+}
+
 func findState(stateRoot string) (*libcontainer.State, error) {
-	hostname, err := os.Hostname()
+	containerId, err := findContainerId()
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +183,7 @@ func findState(stateRoot string) (*libcontainer.State, error) {
 	}
 
 	for _, file := range files {
-		if !strings.HasPrefix(file.Name(), hostname) {
+		if !strings.HasPrefix(file.Name(), containerId) {
 			continue
 		}
 
