@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -30,6 +31,10 @@ const (
 	driverRun          = "/var/run/docker/execdriver/native"
 	containerDriverRun = "/host" + driverRun
 	libcontainerRoot   = "/var/run/rancher/container"
+)
+
+var (
+	cgroupPattern = regexp.MustCompile("^.*/docker-([a-z0-9]+).scope$")
 )
 
 func main() {
@@ -164,6 +169,11 @@ func findContainerId() (string, error) {
 		if strings.Contains(scanner.Text(), "docker/") {
 			parts := strings.Split(scanner.Text(), "/")
 			return parts[len(parts)-1], nil
+		} else {
+			matches := cgroupPattern.FindAllStringSubmatch(scanner.Text(), -1)
+			if len(matches) > 0 && len(matches[0]) > 1 && matches[0][1] != "" {
+				return matches[0][1], nil
+			}
 		}
 	}
 
