@@ -25,12 +25,14 @@ import (
 )
 
 const (
-	version            = "0.0.0"
-	specConfig         = "config.json"
-	runtimeConfig      = "runtime.json"
-	driverRun          = "/var/run/docker/execdriver/native"
-	containerDriverRun = "/host" + driverRun
-	libcontainerRoot   = "/var/run/rancher/container"
+	version                = "0.0.0"
+	specConfig             = "config.json"
+	runtimeConfig          = "runtime.json"
+	driverRunRunc          = "/var/run/runc"
+	driverRun              = "/var/run/docker/execdriver/native"
+	containerDriverRun     = "/host" + driverRun
+	containerDriverRunRunc = "/host" + driverRunRunc
+	libcontainerRoot       = "/var/run/rancher/container"
 )
 
 var (
@@ -70,7 +72,7 @@ type cliFunc func(cli *cli.Context) (int, error)
 func stage2(cli *cli.Context) (int, error) {
 	args := []string{}
 
-	state, err := findState(driverRun)
+	state, err := findState(driverRunRunc, driverRun)
 	if err != nil {
 		return -1, err
 	}
@@ -118,7 +120,7 @@ func stage2(cli *cli.Context) (int, error) {
 }
 
 func start(cli *cli.Context) (int, error) {
-	state, err := findState(containerDriverRun)
+	state, err := findState(containerDriverRunRunc, containerDriverRun)
 	if err != nil {
 		return -1, err
 	}
@@ -181,29 +183,31 @@ func findContainerId() (string, error) {
 	return "", fmt.Errorf("Failed to find container id:\n%s", string(content))
 }
 
-func findState(stateRoot string) (*libcontainer.State, error) {
+func findState(stateRoots ...string) (*libcontainer.State, error) {
 	containerId, err := findContainerId()
 	if err != nil {
 		return nil, err
 	}
 
-	files, err := ioutil.ReadDir(stateRoot)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if !strings.HasPrefix(file.Name(), containerId) {
+	for _, stateRoot := range stateRoots {
+		files, err := ioutil.ReadDir(stateRoot)
+		if err != nil {
 			continue
 		}
 
-		bytes, err := ioutil.ReadFile(path.Join(stateRoot, file.Name(), "state.json"))
-		if err != nil {
-			return nil, err
-		}
+		for _, file := range files {
+			if !strings.HasPrefix(file.Name(), containerId) {
+				continue
+			}
 
-		var state libcontainer.State
-		return &state, json.Unmarshal(bytes, &state)
+			bytes, err := ioutil.ReadFile(path.Join(stateRoot, file.Name(), "state.json"))
+			if err != nil {
+				continue
+			}
+
+			var state libcontainer.State
+			return &state, json.Unmarshal(bytes, &state)
+		}
 	}
 
 	return nil, errors.New("Failed to find state.json")
