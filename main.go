@@ -22,6 +22,7 @@ import (
 	"github.com/docker/docker/pkg/term"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/configs"
+	"github.com/syndtr/gocapability/capability"
 )
 
 const (
@@ -69,6 +70,18 @@ func main() {
 
 type cliFunc func(cli *cli.Context) (int, error)
 
+func allCaps() []string {
+	caps := []string{}
+	for _, cap := range capability.List() {
+		if cap > capability.CAP_LAST_CAP {
+			continue
+		}
+		caps = append(caps, fmt.Sprintf("CAP_%s", strings.ToUpper(cap.String())))
+	}
+
+	return caps
+}
+
 func stage2(cli *cli.Context) (int, error) {
 	args := []string{}
 
@@ -82,7 +95,7 @@ func stage2(cli *cli.Context) (int, error) {
 	config.Devices = state.Config.Devices
 	config.Rootfs = state.Config.Rootfs
 	config.Mounts = state.Config.Mounts
-	config.Capabilities = state.Config.Capabilities
+	config.Capabilities = allCaps()
 	config.Namespaces = configs.Namespaces{
 		configs.Namespace{
 			Type: configs.NEWNS,
