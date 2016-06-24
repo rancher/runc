@@ -26,14 +26,16 @@ import (
 )
 
 const (
-	version                = "0.0.0"
-	specConfig             = "config.json"
-	runtimeConfig          = "runtime.json"
-	driverRunRunc          = "/var/run/runc"
-	driverRun              = "/var/run/docker/execdriver/native"
-	containerDriverRun     = "/host" + driverRun
-	containerDriverRunRunc = "/host" + driverRunRunc
-	libcontainerRoot       = "/var/run/rancher/container"
+	version                   = "0.0.0"
+	specConfig                = "config.json"
+	runtimeConfig             = "runtime.json"
+	driverRunRunc             = "/run/runc"
+	driverVarRunRunc          = "/var/run/runc"
+	driverRun                 = "/var/run/docker/execdriver/native"
+	containerDriverRun        = "/host" + driverRun
+	containerDriverRunRunc    = "/host" + driverRunRunc
+	containerDriverVarRunRunc = "/host" + driverVarRunRunc
+	libcontainerRoot          = "/var/run/rancher/container"
 )
 
 var (
@@ -85,7 +87,7 @@ func allCaps() []string {
 func stage2(cli *cli.Context) (int, error) {
 	args := []string{}
 
-	state, err := findState(driverRunRunc, driverRun)
+	state, err := findState(driverRunRunc, driverVarRunRunc, driverRun)
 	if err != nil {
 		return -1, err
 	}
@@ -133,7 +135,7 @@ func stage2(cli *cli.Context) (int, error) {
 }
 
 func start(cli *cli.Context) (int, error) {
-	state, err := findState(containerDriverRunRunc, containerDriverRun)
+	state, err := findState(containerDriverRunRunc, containerDriverVarRunRunc, containerDriverRun)
 	if err != nil {
 		return -1, err
 	}
