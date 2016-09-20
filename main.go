@@ -183,14 +183,19 @@ func findContainerId() (string, error) {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "docker/") {
-			parts := strings.Split(scanner.Text(), "/")
+		line := scanner.Text()
+		if strings.Contains(line, "docker/") && strings.Contains(line, ":devices:") {
+			parts := strings.Split(line, "/")
 			return parts[len(parts)-1], nil
-		} else {
-			matches := cgroupPattern.FindAllStringSubmatch(scanner.Text(), -1)
-			if len(matches) > 0 && len(matches[0]) > 1 && matches[0][1] != "" {
-				return matches[0][1], nil
-			}
+		}
+	}
+
+	f.Seek(0, 0)
+	scanner = bufio.NewScanner(f)
+	for scanner.Scan() {
+		matches := cgroupPattern.FindAllStringSubmatch(scanner.Text(), -1)
+		if len(matches) > 0 && len(matches[0]) > 1 && matches[0][1] != "" {
+			return matches[0][1], nil
 		}
 	}
 
