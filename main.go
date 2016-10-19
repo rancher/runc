@@ -131,6 +131,10 @@ func stage2(cli *cli.Context) (int, error) {
 		})
 	}
 
+	if len(args) > 0 && args[0] == "norun" {
+		return 0, nil
+	}
+
 	return run(&config, randomString(12), args)
 }
 

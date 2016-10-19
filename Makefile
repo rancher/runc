@@ -5,7 +5,7 @@ BUILDTAGS=
 export GOPATH:=$(CURDIR)/Godeps/_workspace:$(GOPATH)
 
 all:
-	go build -tags netgo -installsuffix netgo -ldflags "-linkmode external -extldflags -static" -tags "$(BUILDTAGS)" -o share-mnt .
+	go build -tags netgo -installsuffix netgo -ldflags "-linkmode external -extldflags -static -s" -tags "$(BUILDTAGS)" -o share-mnt .
 
 vet:
 	go get golang.org/x/tools/cmd/vet
