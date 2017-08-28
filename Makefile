@@ -4,8 +4,11 @@ TEST_DOCKERFILE=script/test_Dockerfile
 BUILDTAGS=
 export GOPATH:=$(CURDIR)/Godeps/_workspace:$(GOPATH)
 
+OS:=$(shell uname -s)
+ARCH:=$(shell uname -m)
+
 all:
-	go build -tags netgo -installsuffix netgo -ldflags "-linkmode external -extldflags -static -s" -tags "$(BUILDTAGS)" -o share-mnt .
+	go build -tags netgo -installsuffix netgo -ldflags "-linkmode external -extldflags -static -s" -tags "$(BUILDTAGS)" -o share-mnt-$(OS)-$(ARCH) .
 
 vet:
 	go get golang.org/x/tools/cmd/vet
