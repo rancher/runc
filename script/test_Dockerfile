@@ -4,6 +4,7 @@ RUN echo "deb http://ftp.us.debian.org/debian testing main contrib" >> /etc/apt/
 
 RUN apt-get -q update && apt-get -qy install --no-install-recommends \
       curl \
+      gcc-6 \
       build-essential \
       libaio-dev \
       libcap-dev \
@@ -16,6 +17,13 @@ RUN apt-get -q update && apt-get -qy install --no-install-recommends \
       libseccomp2 \
       libseccomp-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# CRIU fails to compile with gcc-7; Use gcc-6 instead.
+# Refs: https://botbot.me/freenode/criu/2017-02-13/
+#       https://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg522401.html
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 1 && \
+    update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 1 && \
+    update-alternatives --set cc /usr/bin/gcc
 
 # install criu
 ENV CRIU_VERSION 1.7
