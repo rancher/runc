@@ -1,7 +1,7 @@
-FROM golang:1.4
+FROM golang:1.8.4
 
 RUN echo "deb http://ftp.us.debian.org/debian testing main contrib" >> /etc/apt/sources.list
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	curl \
 	build-essential \
 	libaio-dev \
@@ -14,10 +14,19 @@ RUN apt-get update && apt-get install -y \
 	iptables \
 	libseccomp2 \
 	libseccomp-dev \
-	--no-install-recommends
+	gcc-6 \
+	&& rm -rf /var/lib/apt/lists/*
+
+# CRIU fails to compile with gcc-7; Use gcc-6 instead.
+# Refs: https://botbot.me/freenode/criu/2017-02-13/
+#       https://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg522401.html
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 1 && \
+    update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 1 && \
+    update-alternatives --set cc /usr/bin/gcc
 
 # install criu
-ENV CRIU_VERSION 1.7
+ENV CRIU_VERSION=1.7 \
+    WERROR=0
 RUN mkdir -p /usr/src/criu \
 	&& curl -sSL https://github.com/xemul/criu/archive/v${CRIU_VERSION}.tar.gz | tar -v -C /usr/src/criu/ -xz --strip-components=1 \
 	&& cd /usr/src/criu \
