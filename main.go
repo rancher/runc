@@ -39,6 +39,7 @@ var (
 		"/var/run/runc",
 		"/run/docker/execdriver/native",
 		"/var/run/docker/execdriver/native",
+		"/run/docker/runtime-runc/moby",
 	}
 )
 
